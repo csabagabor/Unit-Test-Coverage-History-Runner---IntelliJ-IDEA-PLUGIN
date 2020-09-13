@@ -1,4 +1,4 @@
-
+> Will be available soon on Jetbrains Marketplace
 > There are some other plugins which automatically re-run tests when a change is detected, but these plugins just use static code analysis to find
 the tests which directly call the changed code. This does not work if you modifiy a private method which is only indirectly called in a test.
 **This plugin works in this case as well because it saves which methods are called during the runtime of a test.**
