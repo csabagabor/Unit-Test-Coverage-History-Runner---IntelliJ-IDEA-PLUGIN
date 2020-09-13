@@ -26,3 +26,5 @@ Also to **reset coverage information** (in case unexpected tests are run), you c
 When you encounter any test for which coverage information is not included, file an issue on GitHub.
 For example the plugin doesn't work when using empty test methods with the Scenario annotation like <code>@Scenario("integration_tests")</code>
 
+# Credits
+IntelliJ IDEA Code Coverage Agent: https://github.com/JetBrains/intellij-coverage
