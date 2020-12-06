@@ -1,3 +1,5 @@
+[Support me on Pateron](https://www.patreon.com/csabagabor?fan_landing=true)
+
 Available on Jetbrains Marketplace: https://plugins.jetbrains.com/plugin/15063-unit-test-coverage-history-runner  
 
 > There are some other plugins which automatically re-run tests when a change is detected, but these plugins just use static code analysis to find
