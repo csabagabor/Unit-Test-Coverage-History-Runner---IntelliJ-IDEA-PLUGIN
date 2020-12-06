@@ -1,4 +1,4 @@
-[Support me on Pateron](https://www.patreon.com/csabagabor?fan_landing=true)
+[Support me on Patreon](https://www.patreon.com/csabagabor?fan_landing=true)
 
 Available on Jetbrains Marketplace: https://plugins.jetbrains.com/plugin/15063-unit-test-coverage-history-runner  
 
