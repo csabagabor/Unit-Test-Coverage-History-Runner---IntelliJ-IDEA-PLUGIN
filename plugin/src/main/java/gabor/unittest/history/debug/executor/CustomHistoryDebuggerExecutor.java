@@ -4,6 +4,7 @@ import com.intellij.execution.Executor;
 import com.intellij.openapi.wm.ToolWindowId;
 import gabor.unittest.history.ResourcesPlugin;
 import gabor.unittest.history.debug.DebugResources;
+import icons.PluginIcons;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.Icon;
@@ -23,13 +24,13 @@ public class CustomHistoryDebuggerExecutor extends Executor {
     @NotNull
     @Override
     public Icon getToolWindowIcon() {
-        return ResourcesPlugin.DEBUG;
+        return PluginIcons.DEBUG;
     }
 
     @Override
     @NotNull
     public Icon getIcon() {
-        return ResourcesPlugin.DEBUG;
+        return PluginIcons.DEBUG;
     }
 
     @Override
