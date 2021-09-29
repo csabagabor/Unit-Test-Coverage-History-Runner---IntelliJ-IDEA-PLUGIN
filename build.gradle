@@ -1,0 +1,4 @@
+configure(subprojects) {
+  version = '1.18'
+  group = 'unittest.gabor'
+}

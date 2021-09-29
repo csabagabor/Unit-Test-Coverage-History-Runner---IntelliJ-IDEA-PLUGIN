@@ -1,0 +1,4 @@
+rootProject.name = 'unit-test-history-runner'
+
+include 'agent'
+include 'plugin'
