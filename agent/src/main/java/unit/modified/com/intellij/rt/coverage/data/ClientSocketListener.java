@@ -1,12 +1,14 @@
 package unit.modified.com.intellij.rt.coverage.data;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 public class ClientSocketListener {
-    private Socket clientSocket;
-    private ObjectOutputStream out;
-    private ObjectInputStream in;
+    private final Socket clientSocket;
+    private final ObjectOutputStream out;
+    private final ObjectInputStream in;
 
     public ClientSocketListener(int port) throws IOException {
         clientSocket = new Socket("127.0.0.1", port);
@@ -27,15 +29,6 @@ public class ClientSocketListener {
             out.writeObject(msg);
         } catch (IOException e) {
             e.printStackTrace();
-        }
-    }
-
-    private Object readMessage() {
-        try {
-            return in.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-            return null;
         }
     }
 

@@ -12,12 +12,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SamplingInstrumenter extends Instrumenter {
-    private String className;
-    private static Pattern allParamsPattern = Pattern.compile("(\\(.*?\\))");
-    private static Pattern paramsPattern = Pattern.compile("(\\[?)(C|Z|S|I|J|F|D|(:?L[^;]+;))");
+    private final static Pattern allParamsPattern = Pattern.compile("(\\(.*?\\))");
+    private final static Pattern paramsPattern = Pattern.compile("(\\[?)(C|Z|S|I|J|F|D|(:?L[^;]+;))");
+    private final String className;
 
-    public SamplingInstrumenter(ClassVisitor classVisitor, String className, boolean shouldCalculateSource) {
-        super(classVisitor, className, shouldCalculateSource);
+    public SamplingInstrumenter(ClassVisitor classVisitor, String className) {
+        super(classVisitor, className);
         this.className = className;
     }
 
@@ -26,8 +26,8 @@ public class SamplingInstrumenter extends Instrumenter {
             return new MethodVisitor(458752, mv) {
                 @Override
                 public void visitCode() {
-                    this.mv.visitLdcInsn(className + "/" + methodName + "#" + getParamsFromDesc(desc) + "#" + getMethodParamCount(desc));
-                    this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, "unit/modified/com/intellij/rt/coverage/data/Redirector",
+                    mv.visitLdcInsn(className + "/" + methodName + "#" + getParamsFromDesc(desc) + "#" + getMethodParamCount(desc));
+                    mv.visitMethodInsn(Opcodes.INVOKESTATIC, "unit/modified/com/intellij/rt/coverage/data/Redirector",
                             "addMethod", "(Ljava/lang/String;)V", false);
                     super.visitCode();
                 }
@@ -46,8 +46,8 @@ public class SamplingInstrumenter extends Instrumenter {
                 @Override
                 public void visitCode() {
                     if (isTest || (isJunit3 && !"setUp".equals(methodName) && !"tearDown".equals(methodName))) {//visitAnnotation() should be called before visitCode() so it's safe to check this condition
-                        this.mv.visitLdcInsn(className + "/" + methodName);
-                        this.mv.visitMethodInsn(Opcodes.INVOKESTATIC, "unit/modified/com/intellij/rt/coverage/data/Redirector",
+                        mv.visitLdcInsn(className + "/" + methodName);
+                        mv.visitMethodInsn(Opcodes.INVOKESTATIC, "unit/modified/com/intellij/rt/coverage/data/Redirector",
                                 "runTestMethod", "(Ljava/lang/String;)V", false);
                     }
                     super.visitCode();

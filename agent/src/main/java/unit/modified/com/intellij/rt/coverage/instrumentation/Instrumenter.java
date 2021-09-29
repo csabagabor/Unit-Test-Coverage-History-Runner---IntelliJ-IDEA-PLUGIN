@@ -7,38 +7,36 @@ import unit.modified.com.intellij.rt.coverage.data.Redirector;
 public abstract class Instrumenter extends ClassVisitor {
     protected final ClassVisitor myClassVisitor;
     private final String myClassName;
-    private final boolean myShouldCalculateSource;
     protected boolean myProcess;
     private boolean myEnum;
     protected boolean isJunit3 = false;
 
-    public Instrumenter(ClassVisitor classVisitor, String className, boolean shouldCalculateSource) {
+    public Instrumenter(ClassVisitor classVisitor, String className) {
         super(458752, classVisitor);
         this.myClassVisitor = classVisitor;
         this.myClassName = className;
-        this.myShouldCalculateSource = shouldCalculateSource;
     }
 
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-        this.myEnum = (access & 16384) != 0;
-        this.myProcess = (access & 512) == 0;
+        myEnum = (access & 16384) != 0;
+        myProcess = (access & 512) == 0;
         isJunit3 =  "junit/framework/TestCase".equals(superName);
         super.visit(version, access, name, signature, superName, interfaces);
     }
 
     @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-        MethodVisitor mv = this.cv.visitMethod(access, name, desc, signature, exceptions);
+        MethodVisitor mv = cv.visitMethod(access, name, desc, signature, exceptions);
         if (mv == null) {
             return null;
         } else if ((access & 64) != 0) {
             return mv;
         } else if ((access & 1024) != 0) {
             return mv;
-        } else if (this.myEnum && isDefaultEnumMethod(name, desc, signature, this.myClassName)) {
+        } else if (myEnum && isDefaultEnumMethod(name, desc, signature, myClassName)) {
             return mv;
         } else {
-            this.myProcess = true;
+            myProcess = true;
             try {
                 if (!Redirector.IS_AGENT_MODE && Redirector.TEST_CLASSES_PATTERNS.containsKey(myClassName + "/" + name)) {
                     return null;
@@ -47,7 +45,7 @@ public abstract class Instrumenter extends ClassVisitor {
                     if (name == null) {
                         name = "";
                     }
-                    return this.createMethodLineEnumerator(mv, name, desc, access, signature, exceptions);
+                    return createMethodLineEnumerator(mv, name, desc, access, signature, exceptions);
                 } else {
                     return mv;
                 }

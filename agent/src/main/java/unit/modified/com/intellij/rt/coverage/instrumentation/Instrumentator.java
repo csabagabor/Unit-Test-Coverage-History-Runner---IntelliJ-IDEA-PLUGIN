@@ -5,8 +5,13 @@ import unit.modified.com.intellij.rt.coverage.data.ClientSocketListener;
 import unit.modified.com.intellij.rt.coverage.data.Redirector;
 import unit.original.com.intellij.rt.coverage.util.classFinder.ClassFinder;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.instrument.Instrumentation;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -42,8 +47,8 @@ public class Instrumentator {
 
         String[] args, testArgs;
         try {
-            args = this.readArgsFromFile(patternFile);
-            testArgs = this.readArgsFromFile(testPatternFile);
+            args = readArgsFromFile(patternFile);
+            testArgs = readArgsFromFile(testPatternFile);
         } catch (IOException e) {
             try {
                 Thread.sleep(2000);
@@ -51,8 +56,8 @@ public class Instrumentator {
                 ex.printStackTrace();
             }
 
-            args = this.readArgsFromFile(patternFile);
-            testArgs = this.readArgsFromFile(testPatternFile);
+            args = readArgsFromFile(patternFile);
+            testArgs = readArgsFromFile(testPatternFile);
         }
 
         if (Redirector.IS_AGENT_MODE) {
@@ -86,21 +91,18 @@ public class Instrumentator {
         List<Pattern> excludePatterns = new ArrayList<>();
         List<Pattern> includePatterns = new ArrayList<>();
         ClassFinder cf = new ClassFinder(includePatterns, excludePatterns);
-        instrumentation.addTransformer(new CoverageClassfileTransformer(false, excludePatterns, includePatterns, cf),
+        instrumentation.addTransformer(new CoverageClassfileTransformer(excludePatterns, includePatterns, cf),
                 true);
     }
 
     private String[] readArgsFromFile(String arg) throws IOException {
         List<String> result = new ArrayList<>();
         File file = new File(arg);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
 
-        try {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
             while (reader.ready()) {
                 result.add(reader.readLine());
             }
-        } finally {
-            reader.close();
         }
 
         return result.toArray(new String[0]);

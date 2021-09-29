@@ -19,19 +19,21 @@ public final class FileHelper {
     }
 
     public static String createCoverageFileWithFolder(Project project, String fileName) {
-        String projectName = getProjectName(project);
-        @NonNls final String folderPath = PathManager.getSystemPath() + File.separator + "test_coverage" + File.separator + projectName;
-        final String path = folderPath + File.separator
+        var projectName = getProjectName(project);
+        @NonNls var folderPath = PathManager.getSystemPath() + File.separator + "test_coverage" + File.separator + projectName;
+        var path = folderPath + File.separator
                 + FileUtil.sanitizeFileName(fileName) + ".cov";
 
-        new File(folderPath).mkdirs();
+        if (!new File(folderPath).mkdirs()) {
+            LoggingHelper.debug("Unable to create directories for " + folderPath);
+        }
 
         return path;
     }
 
     public static void writeClasses(@NotNull File tempFile, @NotNull String[] patterns) throws IOException {
-        BufferedWriter bw = new BufferedWriter(new FileWriter(tempFile, true));
-        for (String coveragePattern : patterns) {
+        var bw = new BufferedWriter(new FileWriter(tempFile, true));
+        for (var coveragePattern : patterns) {
             bw.write(coveragePattern);
             bw.newLine();
         }
@@ -39,11 +41,11 @@ public final class FileHelper {
     }
 
     public static File createTempFile() throws IOException {//delete on exit by default
-        File tempFile = FileUtil.createTempFile("coverage", "args");
+        var tempFile = FileUtil.createTempFile("coverage", "args");
         if (!SystemInfo.isWindows && tempFile.getAbsolutePath().contains(" ")) {
             tempFile = FileUtil.createTempFile(new File(PathManager.getSystemPath(), "coverage"), "coverage", "args", true);
             if (tempFile.getAbsolutePath().contains(" ")) {
-                final String userDefined = System.getProperty("java.test.agent.lib.path");
+                var userDefined = System.getProperty("java.test.agent.lib.path");
                 if (userDefined != null && new File(userDefined).isDirectory()) {
                     tempFile = FileUtil.createTempFile(new File(userDefined), "coverage", "args", true);
                 }
@@ -54,7 +56,7 @@ public final class FileHelper {
 
     @NotNull
     private static String getProjectName(Project project) {
-        String projectName = FileUtil.sanitizeFileName(project.getName());
+        var projectName = FileUtil.sanitizeFileName(project.getName());
         if (projectName.length() > MAX_PROJECT_LENGTH) {
             projectName = projectName.substring(0, MAX_PROJECT_LENGTH);
         }

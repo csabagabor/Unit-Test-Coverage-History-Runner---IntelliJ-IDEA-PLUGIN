@@ -6,19 +6,15 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.ide.highlighter.JavaFileType;
-import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.search.FileTypeIndex;
-import com.intellij.util.indexing.FileBasedIndex;
-import gabor.unittest.history.helper.FileHelper;
-import gabor.unittest.history.helper.OnlyProjectSearchScope;
+import com.intellij.psi.search.GlobalSearchScope;
 import gabor.unittest.history.helper.ConfigType;
+import gabor.unittest.history.helper.FileHelper;
 import gabor.unittest.history.helper.LoggingHelper;
+import gabor.unittest.history.helper.OnlyProjectSearchScope;
 import gabor.unittest.history.helper.OnlyTestSearchScope;
 import org.jetbrains.annotations.NotNull;
 
@@ -28,7 +24,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -37,11 +32,11 @@ import java.util.Set;
 
 public class CoverageContext {
     private final Project myProject;
+    private final String projectFile;
     private File tempFile;
     private File testTempFile;
     private Map<String, Integer> patterns;
     private Map<String, Integer> testPatterns;
-    private String projectFile;
     private Map<String, Map<String, LinkedHashSet<String>>> projectCoverageInfo;
     private ConfigType configType;
     private WeakReference<RunConfiguration> config;
@@ -52,78 +47,36 @@ public class CoverageContext {
     }
 
     public static CoverageContext getInstance(Project project) {
-        return ServiceManager.getService(project, CoverageContext.class);
+        return project.getService(CoverageContext.class);
     }
 
     public void createOwnTempFile() throws IOException {
-
-        File temp = FileHelper.createTempFile();
+        var temp = FileHelper.createTempFile();
         temp.deleteOnExit();
         tempFile = new File(temp.getCanonicalPath());
 
-        File testTemp = FileHelper.createTempFile();
+        var testTemp = FileHelper.createTempFile();
         testTemp.deleteOnExit();
         testTempFile = new File(testTemp.getCanonicalPath());
     }
 
     public synchronized void writePatternsToTempFile() {
         try {
-            patterns = new LinkedHashMap<>();//preserve order
-            int index = 0;
-            Collection<VirtualFile> containingFiles = FileBasedIndex.getInstance()
-                    .getContainingFiles(
-                            FileTypeIndex.NAME,
-                            JavaFileType.INSTANCE,
-                            new OnlyProjectSearchScope(myProject));
-
-            for (VirtualFile virtualFile : containingFiles) {
-                PsiFile psiFile = PsiManager.getInstance(myProject).findFile(virtualFile);
-                if (psiFile instanceof PsiJavaFile) {
-                    PsiJavaFile psiJavaFile = (PsiJavaFile) psiFile;
-                    PsiClass[] javaFileClasses = psiJavaFile.getClasses();
-
-                    for (PsiClass javaFileClass : javaFileClasses) {
-                        patterns.put(javaFileClass.getQualifiedName(), index);
-                        index++;
-                    }
-                }
-            }
-
+            patterns = collectPatterns(new OnlyProjectSearchScope(myProject));
         } catch (Throwable e) {
             LoggingHelper.error(e);
         }
-
 
         try {
             FileHelper.writeClasses(tempFile, patterns.keySet().toArray(new String[0]));
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     public synchronized void writeTestPatternsToTempFile() {
         try {
-            testPatterns = new LinkedHashMap<>();//preserve order
-            int index = 0;
-            Collection<VirtualFile> containingFiles = FileBasedIndex.getInstance()
-                    .getContainingFiles(
-                            FileTypeIndex.NAME,
-                            JavaFileType.INSTANCE,
-                            new OnlyTestSearchScope(myProject));
-
-            for (VirtualFile virtualFile : containingFiles) {
-                PsiFile psiFile = PsiManager.getInstance(myProject).findFile(virtualFile);
-                if (psiFile instanceof PsiJavaFile) {
-                    PsiJavaFile psiJavaFile = (PsiJavaFile) psiFile;
-                    PsiClass[] javaFileClasses = psiJavaFile.getClasses();
-
-                    for (PsiClass javaFileClass : javaFileClasses) {
-                        testPatterns.put(javaFileClass.getQualifiedName(), index);
-                        index++;
-                    }
-                }
-            }
+            testPatterns = collectPatterns(new OnlyTestSearchScope(myProject));
         } catch (Throwable e) {
             LoggingHelper.error(e);
         }
@@ -132,6 +85,25 @@ public class CoverageContext {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private Map<String, Integer> collectPatterns(GlobalSearchScope scope) {
+        var result = new LinkedHashMap<String, Integer>(); //preserve order
+        var index = 0;
+        var containingFiles = FileTypeIndex.getFiles(JavaFileType.INSTANCE, scope);
+        for (var virtualFile : containingFiles) {
+            var psiFile = PsiManager.getInstance(myProject).findFile(virtualFile);
+            if (psiFile instanceof PsiJavaFile) {
+                var psiJavaFile = (PsiJavaFile) psiFile;
+                var javaFileClasses = psiJavaFile.getClasses();
+
+                for (var javaFileClass : javaFileClasses) {
+                    result.put(javaFileClass.getQualifiedName(), index);
+                    index++;
+                }
+            }
+        }
+        return result;
     }
 
     @NotNull
@@ -145,19 +117,15 @@ public class CoverageContext {
     }
 
     public synchronized Map<String, Set<String>> readCoverageInfo() {
-        try {
-            File coverageFile = new File(projectFile);
-            if (!coverageFile.exists()) {
-                resetCoverageInfo();
-                return new HashMap<>();
-            }
+        var coverageFile = new File(projectFile);
+        if (!coverageFile.exists()) {
+            resetCoverageInfo();
+            return new HashMap<>();
+        }
 
-            Kryo kryo = getKryo();
-            Input input = new Input(new FileInputStream(coverageFile));
-            Map<String, Set<String>> coverageInfo = kryo.readObjectOrNull(input, HashMap.class);
-            input.close();
-
-            return coverageInfo;
+        try (var input = new Input(new FileInputStream(coverageFile))) {
+            var kryo = getKryo();
+            return (Map<String, Set<String>>) kryo.readObjectOrNull(input, HashMap.class);
         } catch (Throwable e) {
             LoggingHelper.error(e);
             return new HashMap<>();
@@ -172,38 +140,34 @@ public class CoverageContext {
     }
 
     public synchronized void initProjectCoverageInfo() {
-        //build reverse coverage info, key contains project class$method, List contains unit test name
-
+        // build reverse coverage info, key contains project class$method, List contains unit test name
         projectCoverageInfo = new HashMap<>();
-        Map<String, Set<String>> coverageInfo = readCoverageInfo();
+        var coverageInfo = readCoverageInfo();
 
         coverageInfo.forEach((testMethod, projectMethods) -> {
-            for (String projectMethod : projectMethods) {
-                String onlyMethodName = projectMethod.substring(0, projectMethod.indexOf("#"));
-                String onlyParamsName = projectMethod.substring(projectMethod.indexOf("#") + 1);
+            for (var projectMethod : projectMethods) {
+                var onlyMethodName = projectMethod.substring(0, projectMethod.indexOf("#"));
+                var onlyParamsName = projectMethod.substring(projectMethod.indexOf("#") + 1);
                 projectCoverageInfo.computeIfAbsent(onlyMethodName, key -> new HashMap<>()).computeIfAbsent(onlyParamsName, key -> new LinkedHashSet<>()).add(testMethod);
             }
         });
     }
 
     public synchronized void writeCoverageInfo(Map<String, Set<String>> coverageInfo) {
-        Kryo kryo = getKryo();
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        Output output = new Output(byteArrayOutputStream);
-        kryo.writeObject(output, coverageInfo);
-        output.close();
+        var kryo = getKryo();
 
-        byte[] bytes = byteArrayOutputStream.toByteArray();
-        try (FileOutputStream fos = new FileOutputStream(projectFile)) {
-            fos.write(bytes);
+        try (var byteArrayOutputStream = new ByteArrayOutputStream(); var output = new Output(byteArrayOutputStream); FileOutputStream fos = new FileOutputStream(projectFile)) {
+            kryo.writeObject(output, coverageInfo);
+            output.flush();
+            fos.write(byteArrayOutputStream.toByteArray());
         } catch (IOException e) {
-            e.printStackTrace();
+            LoggingHelper.error(e);
         }
     }
 
     @NotNull
     private static Kryo getKryo() {
-        Kryo kryo = new Kryo();
+        var kryo = new Kryo();
         kryo.register(Map.class);
         kryo.register(HashMap.class);
         kryo.register(String.class);
@@ -224,7 +188,7 @@ public class CoverageContext {
     }
 
     public void setConfig(RunConfiguration configuration) {
-       this.config = new WeakReference<>(configuration);
+        config = new WeakReference<>(configuration);
     }
 
     public WeakReference<RunConfiguration> getConfig() {

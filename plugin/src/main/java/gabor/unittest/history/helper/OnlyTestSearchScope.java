@@ -13,7 +13,7 @@ public class OnlyTestSearchScope extends GlobalSearchScope {
 
     public OnlyTestSearchScope(Project project) {
         super(project);
-        this.index = ProjectRootManager.getInstance(project).getFileIndex();
+        index = ProjectRootManager.getInstance(project).getFileIndex();
     }
 
     @Override

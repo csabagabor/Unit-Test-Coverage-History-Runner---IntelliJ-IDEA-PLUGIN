@@ -1,5 +1,7 @@
 package gabor.unittest.history.action;
 
+import gabor.unittest.history.helper.LoggingHelper;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -7,8 +9,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class ServerSocketSender {
-    private int port;
-    private ServerSocket serverSocket;
+    private final int port;
+    private final ServerSocket serverSocket;
     private Socket clientSocket;
     private ObjectOutputStream out;
     private ObjectInputStream in;
@@ -26,15 +28,7 @@ public class ServerSocketSender {
             in = new ObjectInputStream(clientSocket.getInputStream());
         } catch (IOException e) {
             close();
-            e.printStackTrace();
-        }
-    }
-
-    public void sendMessage(Object msg) {
-        try {
-            out.writeObject(msg);
-        } catch (IOException e) {
-            e.printStackTrace();
+            LoggingHelper.error(e);
         }
     }
 
@@ -42,7 +36,7 @@ public class ServerSocketSender {
         try {
             return in.readObject();
         } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+            LoggingHelper.error(e);
             return null;
         }
     }
