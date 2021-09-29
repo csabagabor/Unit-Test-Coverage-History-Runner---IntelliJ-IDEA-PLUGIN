@@ -3,10 +3,6 @@ plugins {
     id 'java'
 }
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
     implementation project(':agent')
 }
@@ -16,6 +12,11 @@ intellij {
     version 'LATEST-EAP-SNAPSHOT'
     downloadSources = true
     plugins = ['com.intellij.java', 'JUnit', 'TestNG-J']
+}
+patchPluginXml {
+    sinceBuild.set('211')
+    untilBuild.set('')
+    version = project.modVersion
 }
 test {
     useJUnitPlatform()

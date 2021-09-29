@@ -1,4 +1,9 @@
 configure(subprojects) {
   version = '1.18'
+  project.ext.set('modVersion', version)
   group = 'unittest.gabor'
+
+  repositories {
+    mavenCentral()
+  }
 }

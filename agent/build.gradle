@@ -3,10 +3,6 @@ plugins {
     id 'java'
 }
 
-repositories {
-    mavenCentral()
-}
-
 intellij {
     version 'LATEST-EAP-SNAPSHOT'
     downloadSources = true
