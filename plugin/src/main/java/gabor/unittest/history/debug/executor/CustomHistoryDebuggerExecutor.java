@@ -24,7 +24,7 @@ public class CustomHistoryDebuggerExecutor extends Executor {
     @NotNull
     @Override
     public Icon getToolWindowIcon() {
-        return PluginIcons.DEBUG;
+        return PluginIcons.DEBUG13;
     }
 
     @Override
