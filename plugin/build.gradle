@@ -1,21 +1,16 @@
-plugins {
-    id 'java'
-}
-
 dependencies {
     implementation project(':agent')
 }
 
 // See https://github.com/JetBrains/gradle-intellij-plugin/
 intellij {
-    version 'LATEST-EAP-SNAPSHOT'
+    version = project.IntelliJ
     downloadSources = true
     plugins = ['com.intellij.java', 'JUnit', 'TestNG-J']
 }
 patchPluginXml {
     sinceBuild.set('211')
     untilBuild.set('')
-    version = project.modVersion
 }
 test {
     useJUnitPlatform()

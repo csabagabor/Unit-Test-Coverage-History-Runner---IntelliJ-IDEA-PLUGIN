@@ -1,9 +1,5 @@
-plugins {
-    id 'java'
-}
-
 intellij {
-    version 'LATEST-EAP-SNAPSHOT'
+    version = project.IntelliJ
     downloadSources = true
 }
 
