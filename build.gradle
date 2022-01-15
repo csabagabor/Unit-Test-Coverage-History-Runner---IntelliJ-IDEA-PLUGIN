@@ -1,0 +1,18 @@
+plugins {
+    id 'org.jetbrains.intellij' version '1.1.3'
+    id 'java'
+}
+
+configure(subprojects) {
+    project.ext.set('IntelliJ', 'LATEST-EAP-SNAPSHOT')
+
+    version = '1.18'
+    group = 'unittest.gabor'
+
+    apply plugin: 'org.jetbrains.intellij'
+    apply plugin: 'java'
+
+    repositories {
+        mavenCentral()
+    }
+}

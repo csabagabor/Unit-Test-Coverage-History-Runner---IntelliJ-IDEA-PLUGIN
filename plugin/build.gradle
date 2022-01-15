@@ -1,0 +1,17 @@
+dependencies {
+    implementation project(':agent')
+}
+
+// See https://github.com/JetBrains/gradle-intellij-plugin/
+intellij {
+    version = project.IntelliJ
+    downloadSources = true
+    plugins = ['com.intellij.java', 'JUnit', 'TestNG-J']
+}
+patchPluginXml {
+    sinceBuild.set('211')
+    untilBuild.set('')
+}
+test {
+    useJUnitPlatform()
+}
